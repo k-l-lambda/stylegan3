@@ -16,6 +16,7 @@ import json
 import tempfile
 import torch
 
+import env
 import dnnlib
 from training import training_loop
 from metrics import metric_main

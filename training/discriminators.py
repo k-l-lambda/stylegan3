@@ -38,10 +38,18 @@ class HumanDiscriminator(torch.nn.Module):
 
 
 	def forward(self, img, c, update_emas=False, **block_kwargs):
-		schp_out = self.human_parser(img)
+		with torch.no_grad():
+			schp_out = self.human_parser(img)
 		layers = schp_out[0][-1]
 		layers = self.upsample(layers)
 
 		x = torch.cat([img, layers], dim=1)
 
 		return self.sg2(x, c, update_emas=update_emas, **block_kwargs)
+
+
+	def train (self, mode=True):
+		self.human_parser.train(False)
+		self.sg2.train(mode)
+
+		return self
