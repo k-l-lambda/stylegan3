@@ -15,7 +15,7 @@ SCHP_PRETRAINED = os.environ['SCHP_PRETRAINED']
 
 @persistence.persistent_class
 class HumanDiscriminator(torch.nn.Module):
-	def __init__(self, img_channels, **args):
+	def __init__(self, img_resolution, img_channels, **args):
 		super().__init__()
 
 		self.human_parser = schp_networks.init_model('resnet101', num_classes=SCHP_CLASSES, pretrained=None)
@@ -32,8 +32,16 @@ class HumanDiscriminator(torch.nn.Module):
 		for param in self.human_parser.parameters():
 			param.requires_grad = False
 
-		self.sg2 = SG2Discriminator(img_channels=img_channels + SCHP_CLASSES, **args)
+		self.upsample = torch.nn.Upsample(size=[img_resolution, img_resolution], mode='bilinear', align_corners=True)
+
+		self.sg2 = SG2Discriminator(img_resolution=img_resolution, img_channels=img_channels + SCHP_CLASSES, **args)
 
 
 	def forward(self, img, c, update_emas=False, **block_kwargs):
-		pass
+		schp_out = self.human_parser(img)
+		layers = schp_out[0][-1]
+		layers = self.upsample(layers)
+
+		x = torch.cat([img, layers], dim=1)
+
+		return self.sg2(x, c, update_emas=update_emas, **block_kwargs)
