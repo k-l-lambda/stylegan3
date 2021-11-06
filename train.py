@@ -161,6 +161,8 @@ def parse_comma_separated_list(s):
 @click.option('--workers',      help='DataLoader worker processes', metavar='INT',              type=click.IntRange(min=1), default=3, show_default=True)
 @click.option('-n','--dry-run', help='Print training options and exit',                         is_flag=True)
 
+@click.option('-d', '--discr',  help='Discriminator class', metavar='STR',                      type=str, default='networks_stylegan2.Discriminator')
+
 def main(**kwargs):
     """Train a GAN using the techniques described in the paper
     "Alias-Free Generative Adversarial Networks".
@@ -188,7 +190,7 @@ def main(**kwargs):
     opts = dnnlib.EasyDict(kwargs) # Command line arguments.
     c = dnnlib.EasyDict() # Main config dict.
     c.G_kwargs = dnnlib.EasyDict(class_name=None, z_dim=512, w_dim=512, mapping_kwargs=dnnlib.EasyDict())
-    c.D_kwargs = dnnlib.EasyDict(class_name='training.networks_stylegan2.Discriminator', block_kwargs=dnnlib.EasyDict(), mapping_kwargs=dnnlib.EasyDict(), epilogue_kwargs=dnnlib.EasyDict())
+    c.D_kwargs = dnnlib.EasyDict(class_name=f'training.{opts.discr}', block_kwargs=dnnlib.EasyDict(), mapping_kwargs=dnnlib.EasyDict(), epilogue_kwargs=dnnlib.EasyDict())
     c.G_opt_kwargs = dnnlib.EasyDict(class_name='torch.optim.Adam', betas=[0,0.99], eps=1e-8)
     c.D_opt_kwargs = dnnlib.EasyDict(class_name='torch.optim.Adam', betas=[0,0.99], eps=1e-8)
     c.loss_kwargs = dnnlib.EasyDict(class_name='training.loss.StyleGAN2Loss')
